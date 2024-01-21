@@ -1,5 +1,7 @@
 install.packages("tidyverse")
 library(tidyverse)
+install.packages("plotly")
+library(plotly)
 #the dataset was uploaded and imported.
 #the imported data was read and viewed
 installed.packages()
@@ -63,9 +65,10 @@ print(Nigeria_depressive_disorder_mean)
 #create a dataframe with country and corresponding mean
 mean_data_df<-data.frame(Country=c('Ghana','Nigeria','UK'),Mean=c(Ghana_depressive_disorder_mean,Nigeria_depressive_disorder_mean,UK_depressive_disorders_mean))
 print(mean_data_df)
-# ggplot(data=mean_data_df)+geom_bar(mapping=aes(x='Mean',fill='Country'))+
-#   labs(title='Mean Data',subtitle = 'For 3 countries',caption = 'from kaggle dataset')+
-#   annotate("text",x=20,y=1500,label = "The sample",color="purple",fontface="bold",size=4.5,angle=25)
+ggplot(data=mean_data_df)+geom_bar(mapping=aes(y=Mean,x=Country,fill=Mean),stat="identity")+
+  labs(title='Mean Data',subtitle = 'For 3 countries',caption = 'from kaggle dataset')
+  annotate("text",x=20,y=1500,label = "The sample",color="purple",fontface="bold",size=4.5,angle=25)
+
 #find the cumulative some of depressive disorders in the 3 entities
 Nigeria_depression_disorder_cum_sum <-cumsum(Nigeria_prevalence_df$`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`)
 print(Nigeria_depression_disorder_cum_sum)
@@ -97,3 +100,61 @@ print(as.data.frame(depressive_disorder_sum_by_country))
 # depressive_disorder_sum_by_country1 <- `prevalence_by_mental_and_substance_use_disorder` %>%
 #    drop_na() %>% group_by('Entity') %>% summarise(total=sum(`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`))
 #  print(as.data.frame(depressive_disorder_sum_by_country1))
+#sort out to find country with highest and lowest disorder
+sorted_depressive_disorder_sum <- data.frame(arrange(depressive_disorder_sum_by_country,desc(`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`)))
+print(sorted_depressive_disorder_sum)
+# depression_disorder_sorted1 <-data.frame(depressive_disorder_sum_by_country[order(-depressive_disorder_sum_by_country$`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`),])
+# print(depression_disorder_sorted1)
+#create a plot
+ggplot(data=depressive_disorder_sum_by_country,aes(x=Entity,y=`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`))+geom_bar(stat = "identity",fill="skyblue")
+ggplot(data=depressive_disorder_sum_by_country)+geom_bar(mapping = aes(x=Entity,y=`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`),stat="identity",fill="purple")+
+  labs(title = "depressive disorder by country",subtitle = "This is based on total for recorded years",caption = "kaggle data")
+#find the sum of 3 categories for each entity
+overview_three_categories <- aggregate(cbind(`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`,`Prevalence - Alcohol use disorders - Sex: Both - Age: Age-standardized (Percent)`,`Prevalence - Drug use disorders - Sex: Both - Age: Age-standardized (Percent)`)~`Entity`,data = prevalence_by_mental_and_substance_use_disorder,sum)
+print(overview_three_categories)
+#again the group by method didnt yield expected result
+# newbie<- `prevalence_by_mental_and_substance_use_disorder` %>%
+#       drop_na() %>% group_by('Entity') %>% summarise(sum(`Prevalence - Depressive disorders - Sex: Both - Age: Age-standardized (Percent)`),sum(`Prevalence - Alcohol use disorders - Sex: Both - Age: Age-standardized (Percent)`),sum(`Prevalence - Drug use disorders - Sex: Both - Age: Age-standardized (Percent)`))
+# print(newbie)
+#find the total for each entity for schizophrenia
+schizophrenia_sum_by_country <-aggregate(`Prevalence - Schizophrenia - Sex: Both - Age: Age-standardized (Percent)`~`Entity`,data = prevalence_by_mental_and_substance_use_disorder,sum)
+print(schizophrenia_sum_by_country)
+#sortout the entities in descending order based o schizophrenia
+sorted_schizophrenia <- arrange(schizophrenia_sum_by_country,desc(`Prevalence - Schizophrenia - Sex: Both - Age: Age-standardized (Percent)`))
+print(sorted_schizophrenia)
+#draw a scatter plot for total of schizophrenia based on entities
+ggplot(data = schizophrenia_sum_by_country)+geom_point(mapping = aes(x=Entity,y=`Prevalence - Schizophrenia - Sex: Both - Age: Age-standardized (Percent)`),color="blue")+
+  labs(title = "Schizophrenia distribution based on country",subtitle = "for all countries",caption = "from kaggle")
+#find the total for each entity for bipolar
+bipolar_sum_by_country <- aggregate(`Prevalence - Bipolar disorder - Sex: Both - Age: Age-standardized (Percent)`~Entity,data = prevalence_by_mental_and_substance_use_disorder,sum) 
+print(bipolar_sum_by_country)
+#sortout the entities in descending order based on bipolar
+sorted_bipolar_sum_by_country<-arrange(bipolar_sum_by_country,-`Prevalence - Bipolar disorder - Sex: Both - Age: Age-standardized (Percent)`)
+print(sorted_bipolar_sum_by_country)
+#draw a sctter plot for total of bipolar based on entities
+ggplot(data = bipolar_sum_by_country)+geom_point(mapping=aes(x=Entity,y=`Prevalence - Bipolar disorder - Sex: Both - Age: Age-standardized (Percent)`),color="skyblue")+
+  labs(title = "Bipolar distribution based on country",subtitle = "for all countries",caption = "from kaggle")
+#the plot as modified to make it interactive using plotly packageq()
+gg<-ggplot(data = bipolar_sum_by_country)+geom_point(mapping=aes(x=Entity,y=`Prevalence - Bipolar disorder - Sex: Both - Age: Age-standardized (Percent)`),color="skyblue")+
+  labs(title = "Bipolar distribution based on country",subtitle = "for all countries",caption = "from kaggle")
+plotly_plot <-ggplotly(gg)
+plotly_plot
+eating_disorder_sum_by_country <-aggregate(`Prevalence - Eating disorders - Sex: Both - Age: Age-standardized (Percent)`~`Entity`,data=prevalence_by_mental_and_substance_use_disorder,sum)
+print(eating_disorder_sum_by_country)
+#sortout the entities in descending order based on eating disorder
+sorted_eating_disorder_sum_by_country <- arrange(eating_disorder_sum_by_country,desc(`Prevalence - Eating disorders - Sex: Both - Age: Age-standardized (Percent)`))
+print(sorted_eating_disorder_sum_by_country)         
+#draw a scatter plot for total of eating disorder based on entities
+gg<-ggplot(data=eating_disorder_sum_by_country)+geom_point(mapping=aes(x=Entity,y=`Prevalence - Eating disorders - Sex: Both - Age: Age-standardized (Percent)`),color="magenta")+
+  labs(title = "eating distribution based on country",subtitle = "for all countries",caption = "from kaggle")
+plotly <- ggplotly(gg)
+plotly
+#ONE BY YEAR
+eating_disorder_sum_by_year <- aggregate(`Prevalence - Eating disorders - Sex: Both - Age: Age-standardized (Percent)`~Year,data=prevalence_by_mental_and_substance_use_disorder,sum)
+print(eating_disorder_sum_by_year)
+sorted_eating_disorder_sum_by_year <-arrange(eating_disorder_sum_by_year,desc(`Prevalence - Eating disorders - Sex: Both - Age: Age-standardized (Percent)`))
+print(sorted_eating_disorder_sum_by_year)
+gg<-ggplot(data=eating_disorder_sum_by_year)+geom_point(mapping=aes(x=Year,y=`Prevalence - Eating disorders - Sex: Both - Age: Age-standardized (Percent)`,color="orange"))+
+  labs(title = "eating distribution based on year",subtitle = "for all countries",caption = "from kaggle")
+plotly<-ggplotly(gg)
+plotly
